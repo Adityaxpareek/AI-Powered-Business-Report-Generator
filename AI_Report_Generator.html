@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Report Generator — Aditya Pareek</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── DESIGN DIRECTION: Dark industrial / editorial terminal ── */
+:root{
+  --bg:#080c14;
+  --bg2:#0d1220;
+  --panel:#111827;
+  --panel2:#161f30;
+  --border:#1e2d45;
+  --border2:#263347;
+  --text:#e8edf5;
+  --text2:#94a3b8;
+  --muted:#4a5568;
+
+  --cyan:#00e5ff;
+  --cyan-dim:rgba(0,229,255,.12);
+  --cyan-glow:rgba(0,229,255,.25);
+  --gold:#f5c842;
+  --gold-dim:rgba(245,200,66,.1);
+  --green:#00d48c;
+  --green-dim:rgba(0,212,140,.1);
+  --red:#ff4757;
+  --red-dim:rgba(255,71,87,.1);
+
+  --r:10px;
+  --r-lg:14px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Outfit',sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* animated grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── TOP NAV ── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  height:60px;
+  background:rgba(8,12,20,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;
+}
+.nav-brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{
+  width:36px;height:36px;border-radius:9px;
+  background:linear-gradient(135deg,var(--cyan),#0084ff);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 20px var(--cyan-glow);
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:2px;color:#fff;
+}
+.brand-name span{color:var(--cyan);}
+.nav-pills{display:flex;align-items:center;gap:8px;}
+.nav-pill{
+  font-family:'Fira Code',monospace;font-size:11px;
+  padding:4px 12px;border-radius:100px;border:1px solid;
+}
+.pill-cyan{color:var(--cyan);border-color:rgba(0,229,255,.3);background:var(--cyan-dim);}
+.pill-gold{color:var(--gold);border-color:rgba(245,200,66,.3);background:var(--gold-dim);}
+.nav-author{font-size:12px;color:var(--muted);font-family:'Fira Code',monospace;}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:5;
+  text-align:center;padding:56px 24px 44px;
+}
+.hero-eyebrow{
+  font-family:'Fira Code',monospace;font-size:11px;
+  letter-spacing:3px;text-transform:uppercase;color:var(--cyan);
+  margin-bottom:14px;
+}
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(42px,7vw,80px);
+  letter-spacing:3px;line-height:1;
+  color:#fff;margin-bottom:12px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{
+  font-size:15px;color:var(--text2);
+  max-width:540px;margin:0 auto 36px;line-height:1.7;font-weight:300;
+}
+.hero-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.chip{
+  font-family:'Fira Code',monospace;font-size:11px;
+  padding:5px 14px;border-radius:100px;
+  border:1px solid var(--border2);color:var(--text2);
+  background:var(--panel);
+}
+
+/* ── MAIN GRID ── */
+.container{
+  position:relative;z-index:5;
+  max-width:1140px;margin:0 auto;
+  padding:0 24px 60px;
+  display:grid;
+  grid-template-columns:400px 1fr;
+  gap:22px;
+}
+@media(max-width:860px){.container{grid-template-columns:1fr;}}
+
+/* ── PANEL ── */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+}
+.panel-header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel2);
+}
+.ph-dot{width:8px;height:8px;border-radius:50%;}
+.ph-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.2px;}
+.ph-sub{font-size:11px;color:var(--muted);margin-left:auto;font-family:'Fira Code',monospace;}
+.panel-body{padding:20px;}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:14px;}
+.flabel{
+  font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--text2);margin-bottom:5px;display:block;
+}
+input[type=text],input[type=number],select,textarea{
+  width:100%;background:var(--bg2);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:400;padding:10px 14px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  resize:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(0,229,255,.1);
+}
+input::placeholder,textarea::placeholder{color:var(--muted);font-weight:300;}
+select option{background:var(--panel);}
+
+/* Data rows */
+.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.data-row-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:8px;}
+.data-row-3 input,
+.data-grid input{margin-bottom:0;}
+
+/* Row header */
+.row-hdr{
+  display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;
+  margin-bottom:4px;padding:0 2px;
+}
+.row-hdr span{font-family:'Fira Code',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+
+/* Btn icon */
+.bti{
+  width:36px;height:36px;border:none;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:all .15s;flex-shrink:0;
+}
+.bti-del{background:var(--red-dim);color:var(--red);}
+.bti-del:hover{background:rgba(255,71,87,.25);}
+
+.row-wrap{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.row-wrap .data-row-3{flex:1;margin-bottom:0;}
+
+/* Buttons */
+.btn{
+  padding:11px 20px;border:none;border-radius:var(--r);
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-cyan{
+  background:linear-gradient(135deg,var(--cyan),#0099cc);
+  color:#000;box-shadow:0 4px 16px var(--cyan-glow);
+}
+.btn-cyan:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--cyan-glow);}
+.btn-cyan:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{background:var(--panel2);color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+.btn-row{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;}
+.btn-full{width:100%;justify-content:center;}
+
+/* Report type tabs */
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.tab{
+  padding:7px 16px;border-radius:100px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1.5px solid var(--border2);
+  color:var(--text2);background:var(--bg2);transition:all .15s;
+}
+.tab.active{
+  background:var(--cyan-dim);border-color:var(--cyan);
+  color:var(--cyan);
+}
+
+/* Section label */
+.sec-label{
+  font-family:'Fira Code',monospace;font-size:10px;
+  text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);
+  margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.sec-label::before{content:'//';color:var(--cyan);font-weight:700;}
+
+/* Add row btn */
+.btn-add-row{
+  width:100%;padding:8px;border:1.5px dashed var(--border2);
+  border-radius:var(--r);background:transparent;
+  color:var(--text2);font-family:'Outfit',sans-serif;font-size:12px;
+  font-weight:500;cursor:pointer;transition:all .15s;margin-top:4px;
+}
+.btn-add-row:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+
+/* ── RIGHT PANEL: REPORT OUTPUT ── */
+.report-panel{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+  display:flex;flex-direction:column;min-height:600px;
+}
+.rp-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  background:var(--panel2);display:flex;align-items:center;gap:10px;
+}
+.rp-status{
+  margin-left:auto;display:flex;align-items:center;gap:6px;
+  font-family:'Fira Code',monospace;font-size:11px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;}
+.status-idle{background:var(--muted);}
+.status-loading{background:var(--gold);animation:pulse 1s infinite;}
+.status-done{background:var(--green);}
+.status-error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* IDLE state */
+.rp-idle{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:48px 32px;text-align:center;gap:16px;
+}
+.idle-icon{
+  width:70px;height:70px;border-radius:18px;
+  background:linear-gradient(135deg,var(--cyan-dim),var(--gold-dim));
+  border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  margin-bottom:4px;
+}
+.idle-title{font-size:17px;font-weight:700;color:var(--text);}
+.idle-sub{font-size:13px;color:var(--text2);line-height:1.6;max-width:320px;font-weight:300;}
+
+/* LOADING */
+.rp-loading{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;
+  padding:48px 32px;text-align:center;
+}
+.loading-ring{
+  width:56px;height:56px;border-radius:50%;
+  border:3px solid var(--border2);
+  border-top-color:var(--cyan);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-steps{display:flex;flex-direction:column;gap:8px;width:100%;max-width:300px;}
+.loading-step{
+  font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.loading-step.active{color:var(--cyan);}
+.loading-step.done{color:var(--green);}
+.step-icon{font-size:14px;width:18px;text-align:center;}
+
+/* REPORT CONTENT */
+.rp-content{
+  flex:1;padding:28px;overflow-y:auto;
+  display:none;
+  font-size:14px;line-height:1.75;color:var(--text);
+}
+.rp-content.visible{display:block;animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Report typography */
+.report-doc{ font-family:'Outfit',sans-serif; }
+.report-doc h1{
+  font-family:'Bebas Neue',sans-serif;font-size:34px;
+  letter-spacing:2px;color:#fff;margin-bottom:4px;line-height:1.1;
+}
+.report-doc h2{
+  font-size:15px;font-weight:700;color:var(--cyan);
+  margin:24px 0 10px;padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+  text-transform:uppercase;letter-spacing:.8px;
+}
+.report-doc h3{
+  font-size:13px;font-weight:700;color:var(--gold);
+  margin:16px 0 6px;
+}
+.report-doc p{
+  font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:10px;
+}
+.report-doc ul{
+  margin:6px 0 10px 0;padding:0;list-style:none;
+  display:flex;flex-direction:column;gap:5px;
+}
+.report-doc ul li{
+  font-size:13px;color:var(--text2);padding-left:16px;position:relative;
+}
+.report-doc ul li::before{
+  content:'›';position:absolute;left:0;color:var(--cyan);font-weight:700;
+}
+.report-doc strong{color:var(--text);font-weight:600;}
+
+/* Report meta strip */
+.report-meta{
+  display:flex;gap:12px;flex-wrap:wrap;
+  padding:12px 16px;background:var(--bg2);
+  border-radius:var(--r);margin:14px 0 20px;
+  border:1px solid var(--border);
+}
+.meta-item{display:flex;flex-direction:column;gap:2px;}
+.meta-key{font-family:'Fira Code',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.meta-val{font-size:12px;font-weight:600;color:var(--text);}
+
+/* KPI boxes in report */
+.report-kpis{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:10px;margin:14px 0;
+}
+.r-kpi{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;
+}
+.r-kpi-lbl{font-family:'Fira Code',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+.r-kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--cyan);letter-spacing:1px;}
+.r-kpi-sub{font-size:11px;color:var(--text2);}
+
+/* Data table in report */
+.r-table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12px;}
+.r-table th{
+  background:var(--bg2);color:var(--muted);
+  font-family:'Fira Code',monospace;font-size:10px;
+  text-transform:uppercase;letter-spacing:.8px;
+  padding:8px 12px;text-align:left;
+  border-bottom:1px solid var(--border2);
+}
+.r-table td{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  color:var(--text2);font-family:'Fira Code',monospace;
+}
+.r-table tr:hover td{background:rgba(255,255,255,.02);}
+
+/* Action bar */
+.action-bar{
+  padding:14px 20px;border-top:1px solid var(--border);
+  background:var(--panel2);display:flex;gap:10px;align-items:center;
+}
+
+/* Error state */
+.rp-error{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:12px;padding:48px 32px;text-align:center;
+}
+
+/* Footer */
+.footer{
+  position:relative;z-index:5;
+  text-align:center;padding:24px;
+  border-top:1px solid var(--border);
+  font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);
+  letter-spacing:1px;
+}
+.footer span{color:var(--cyan);}
+
+@media(max-width:600px){
+  .nav{padding:0 16px;}
+  .hero{padding:36px 16px 28px;}
+  .container{padding:0 14px 40px;}
+  .data-row-3,.data-grid{grid-template-columns:1fr;}
+  .row-hdr{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="brand-mark">🤖</div>
+    <div class="brand-name">REPORT<span>AI</span></div>
+  </div>
+  <div class="nav-pills">
+    <span class="nav-pill pill-cyan">Gen AI Powered</span>
+    <span class="nav-pill pill-gold">Prompt Engineering</span>
+  </div>
+  <div class="nav-author">// Aditya Pareek · Project 3</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">⚡ Project 3 — AI × Finance Automation</div>
+  <h1>AI Business<br/><em>Report Generator</em></h1>
+  <p>Enter your raw financial data. Generative AI transforms it into professional reports — financial summaries, audit notes, or management briefings — in seconds.</p>
+  <div class="hero-chips">
+    <span class="chip">Prompt Engineering</span>
+    <span class="chip">Claude AI API</span>
+    <span class="chip">Financial Analysis</span>
+    <span class="chip">Audit Ready</span>
+    <span class="chip">Management Reports</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- LEFT: INPUT PANEL -->
+  <div>
+    <!-- Company Info -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">
+        <div class="ph-dot" style="background:var(--cyan)"></div>
+        <div class="ph-title">Company Details</div>
+        <div class="ph-sub">Step 1 of 3</div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <span class="flabel">Company / Business Name</span>
+          <input type="text" id="compName" placeholder="e.g. Aditya Enterprises Pvt. Ltd." value="Aditya Enterprises Pvt. Ltd."/>
+        </div>
+        <div class="data-grid">
+          <div class="field" style="margin-bottom:0">
+            <span class="flabel">Financial Year</span>
+            <select id="finYear">
+              <option>FY 2024–25</option>
+              <option selected>FY 2025–26</option>
+              <option>FY 2026–27</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <span class="flabel">Industry</span>
+            <select id="industry">
+              <option>Retail / Trading</option>
+              <option>Manufacturing</option>
+              <option selected>IT / Software Services</option>
+              <option>Accounting / Finance</option>
+              <option>Consulting</option>
+              <option>E-Commerce</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Type -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">
+        <div class="ph-dot" style="background:var(--gold)"></div>
+        <div class="ph-title">Report Type</div>
+        <div class="ph-sub">Step 2 of 3</div>
+      </div>
+      <div class="panel-body">
+        <div class="tabs" id="reportTypeTabs">
+          <div class="tab active" onclick="setTab(this,'financial')">📊 Financial Summary</div>
+          <div class="tab" onclick="setTab(this,'audit')">🔍 Audit Note</div>
+          <div class="tab" onclick="setTab(this,'management')">📋 Management Report</div>
+          <div class="tab" onclick="setTab(this,'gst')">🧾 GST Analysis</div>
+        </div>
+        <div class="field">
+          <span class="flabel">Additional Instructions (Optional)</span>
+          <textarea id="extraInstructions" rows="2" placeholder="e.g. Focus on Q4 performance, highlight variance from last year, mention working capital issues..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Data -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">
+        <div class="ph-dot" style="background:var(--green)"></div>
+        <div class="ph-title">Financial Data</div>
+        <div class="ph-sub">Step 3 of 3</div>
+      </div>
+      <div class="panel-body">
+
+        <div class="sec-label">Revenue & Income</div>
+        <div class="row-hdr"><span>Source</span><span>Amount (₹)</span><span>vs Last Year</span></div>
+        <div id="revenueRows"></div>
+        <button class="btn-add-row" onclick="addRevRow()">+ Add Revenue Line</button>
+
+        <div class="sec-label">Expenses</div>
+        <div class="row-hdr"><span>Expense Head</span><span>Amount (₹)</span><span>% of Revenue</span></div>
+        <div id="expenseRows"></div>
+        <button class="btn-add-row" onclick="addExpRow()">+ Add Expense Line</button>
+
+        <div class="sec-label">Key Metrics</div>
+        <div class="data-grid">
+          <div>
+            <span class="flabel">Opening Balance (₹)</span>
+            <input type="number" id="mOpenBal" placeholder="0" value="280000"/>
+          </div>
+          <div>
+            <span class="flabel">Closing Balance (₹)</span>
+            <input type="number" id="mCloseBal" placeholder="0" value="410000"/>
+          </div>
+          <div>
+            <span class="flabel">Total Debtors (₹)</span>
+            <input type="number" id="mDebtors" placeholder="0" value="125000"/>
+          </div>
+          <div>
+            <span class="flabel">Total Creditors (₹)</span>
+            <input type="number" id="mCreditors" placeholder="0" value="68000"/>
+          </div>
+          <div>
+            <span class="flabel">Tax Paid (₹)</span>
+            <input type="number" id="mTax" placeholder="0" value="42000"/>
+          </div>
+          <div>
+            <span class="flabel">GST Collected (₹)</span>
+            <input type="number" id="mGST" placeholder="0" value="87000"/>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn btn-cyan btn-full" id="generateBtn" onclick="generateReport()">
+            🤖 Generate AI Report
+          </button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="loadSample()" style="flex:1;justify-content:center;">📥 Load Sample Data</button>
+          <button class="btn btn-ghost" onclick="clearAll()" style="flex:1;justify-content:center;">🗑 Clear</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: REPORT OUTPUT -->
+  <div class="report-panel" id="reportPanel">
+    <div class="rp-header">
+      <div class="ph-dot" style="background:var(--cyan)"></div>
+      <div class="ph-title">Generated Report</div>
+      <div class="rp-status" id="statusBar">
+        <div class="status-dot status-idle" id="statusDot"></div>
+        <span id="statusText" style="color:var(--muted)">Awaiting input</span>
+      </div>
+    </div>
+
+    <!-- IDLE -->
+    <div class="rp-idle" id="stateIdle">
+      <div class="idle-icon">📄</div>
+      <div class="idle-title">Your report will appear here</div>
+      <div class="idle-sub">Fill in your company details and financial data on the left, choose a report type, then click <strong style="color:var(--cyan)">Generate AI Report</strong>.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+        <span class="chip">Financial Summary</span>
+        <span class="chip">Audit Notes</span>
+        <span class="chip">Management Report</span>
+        <span class="chip">GST Analysis</span>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="rp-loading" id="stateLoading" style="display:none;">
+      <div class="loading-ring"></div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">AI is generating your report…</div>
+      <div class="loading-steps" id="loadingSteps">
+        <div class="loading-step" id="step1"><span class="step-icon">⏳</span> Reading financial data</div>
+        <div class="loading-step" id="step2"><span class="step-icon">⏳</span> Applying prompt engineering</div>
+        <div class="loading-step" id="step3"><span class="step-icon">⏳</span> Calculating key ratios</div>
+        <div class="loading-step" id="step4"><span class="step-icon">⏳</span> Drafting narrative sections</div>
+        <div class="loading-step" id="step5"><span class="step-icon">⏳</span> Formatting final report</div>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="rp-error" id="stateError" style="display:none;">
+      <div style="font-size:40px;">⚠️</div>
+      <div style="font-size:15px;font-weight:600;color:var(--red)">Generation Failed</div>
+      <div style="font-size:13px;color:var(--text2);max-width:300px;line-height:1.6;" id="errorMsg">Something went wrong. Please check your connection and try again.</div>
+      <button class="btn btn-ghost" onclick="resetState()">↩ Try Again</button>
+    </div>
+
+    <!-- REPORT CONTENT -->
+    <div class="rp-content" id="stateReport"></div>
+
+    <!-- ACTION BAR (shown when report ready) -->
+    <div class="action-bar" id="actionBar" style="display:none;">
+      <button class="btn btn-ghost" onclick="printReport()" style="font-size:12px;padding:8px 16px;">🖨 Print Report</button>
+      <button class="btn btn-ghost" onclick="copyReport()" style="font-size:12px;padding:8px 16px;" id="copyBtn">📋 Copy Text</button>
+      <button class="btn btn-ghost" onclick="resetState()" style="font-size:12px;padding:8px 16px;margin-left:auto;">🔄 New Report</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Built by <span>Aditya Pareek</span> · MBA Candidate · Prompt Engineering × Finance Automation · 2026
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────
+let currentTab = 'financial';
+let revRowId = 0, expRowId = 0;
+let generatedText = '';
+
+// ── TABS ───────────────────────────────────
+function setTab(el, type) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = type;
+}
+
+// ── DYNAMIC ROWS ───────────────────────────
+function addRevRow(data = {}) {
+  const id = revRowId++;
+  const div = document.createElement('div');
+  div.className = 'row-wrap';
+  div.id = 'rev_' + id;
+  div.innerHTML = `
+    <div class="data-row-3" style="flex:1;margin-bottom:0;">
+      <input type="text" placeholder="e.g. Product Sales" value="${data.name||''}"/>
+      <input type="number" placeholder="₹ Amount" value="${data.amt||''}"/>
+      <input type="text" placeholder="+12%" value="${data.change||''}"/>
+    </div>
+    <button class="bti bti-del" onclick="document.getElementById('rev_${id}').remove()">✕</button>
+  `;
+  document.getElementById('revenueRows').appendChild(div);
+}
+
+function addExpRow(data = {}) {
+  const id = expRowId++;
+  const div = document.createElement('div');
+  div.className = 'row-wrap';
+  div.id = 'exp_' + id;
+  div.innerHTML = `
+    <div class="data-row-3" style="flex:1;margin-bottom:0;">
+      <input type="text" placeholder="e.g. Staff Salaries" value="${data.name||''}"/>
+      <input type="number" placeholder="₹ Amount" value="${data.amt||''}"/>
+      <input type="text" placeholder="e.g. 28%" value="${data.pct||''}"/>
+    </div>
+    <button class="bti bti-del" onclick="document.getElementById('exp_${id}').remove()">✕</button>
+  `;
+  document.getElementById('expenseRows').appendChild(div);
+}
+
+function getRows(containerId) {
+  const rows = [];
+  document.getElementById(containerId).querySelectorAll('.row-wrap').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs[0].value || inputs[1].value) {
+      rows.push({ name: inputs[0].value, amt: inputs[1].value, extra: inputs[2].value });
+    }
+  });
+  return rows;
+}
+
+// ── SAMPLE DATA ────────────────────────────
+function loadSample() {
+  document.getElementById('compName').value = 'Aditya Enterprises Pvt. Ltd.';
+  document.getElementById('finYear').value = 'FY 2025–26';
+  document.getElementById('industry').value = 'IT / Software Services';
+  document.getElementById('extraInstructions').value = 'Highlight profitability trend and flag any working capital concerns. Include recommendations for next quarter.';
+
+  document.getElementById('revenueRows').innerHTML = '';
+  document.getElementById('expenseRows').innerHTML = '';
+  revRowId = 0; expRowId = 0;
+
+  [
+    { name: 'Software Development Services', amt: '1850000', change: '+22%' },
+    { name: 'Consulting & Advisory', amt: '620000', change: '+8%' },
+    { name: 'Product Licensing', amt: '380000', change: '+35%' },
+    { name: 'Maintenance Contracts', amt: '210000', change: '+5%' },
+  ].forEach(r => addRevRow(r));
+
+  [
+    { name: 'Staff Salaries & Benefits', amt: '980000', pct: '33%' },
+    { name: 'Infrastructure & Cloud Costs', amt: '240000', pct: '8%' },
+    { name: 'Marketing & Business Dev.', amt: '180000', pct: '6%' },
+    { name: 'Office & Administrative', amt: '120000', pct: '4%' },
+    { name: 'Professional Fees & Legal', amt: '85000', pct: '3%' },
+    { name: 'Depreciation', amt: '62000', pct: '2%' },
+  ].forEach(e => addExpRow(e));
+
+  document.getElementById('mOpenBal').value = '480000';
+  document.getElementById('mCloseBal').value = '920000';
+  document.getElementById('mDebtors').value = '340000';
+  document.getElementById('mCreditors').value = '128000';
+  document.getElementById('mTax').value = '185000';
+  document.getElementById('mGST').value = '278000';
+}
+
+function clearAll() {
+  document.getElementById('revenueRows').innerHTML = '';
+  document.getElementById('expenseRows').innerHTML = '';
+  revRowId = 0; expRowId = 0;
+  resetState();
+}
+
+// ── STATUS HELPERS ─────────────────────────
+function setState(state) {
+  document.getElementById('stateIdle').style.display = 'none';
+  document.getElementById('stateLoading').style.display = 'none';
+  document.getElementById('stateError').style.display = 'none';
+  document.getElementById('stateReport').classList.remove('visible');
+  document.getElementById('stateReport').style.display = 'none';
+  document.getElementById('actionBar').style.display = 'none';
+
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot';
+
+  if (state === 'idle') {
+    document.getElementById('stateIdle').style.display = '';
+    dot.classList.add('status-idle'); txt.style.color = 'var(--muted)'; txt.textContent = 'Awaiting input';
+  } else if (state === 'loading') {
+    document.getElementById('stateLoading').style.display = '';
+    dot.classList.add('status-loading'); txt.style.color = 'var(--gold)'; txt.textContent = 'Generating…';
+  } else if (state === 'done') {
+    document.getElementById('stateReport').style.display = 'block';
+    document.getElementById('stateReport').classList.add('visible');
+    document.getElementById('actionBar').style.display = 'flex';
+    dot.classList.add('status-done'); txt.style.color = 'var(--green)'; txt.textContent = 'Report ready';
+  } else if (state === 'error') {
+    document.getElementById('stateError').style.display = '';
+    dot.classList.add('status-error'); txt.style.color = 'var(--red)'; txt.textContent = 'Error';
+  }
+}
+
+function resetState() { setState('idle'); }
+
+// ── LOADING ANIMATION ──────────────────────
+function animateSteps() {
+  const steps = ['step1','step2','step3','step4','step5'];
+  steps.forEach(s => {
+    const el = document.getElementById(s);
+    if(el){ el.className = 'loading-step'; el.querySelector('.step-icon').textContent = '⏳'; }
+  });
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i > 0) {
+      const prev = document.getElementById(steps[i - 1]);
+      if(prev){ prev.className = 'loading-step done'; prev.querySelector('.step-icon').textContent = '✓'; }
+    }
+    if (i < steps.length) {
+      const cur = document.getElementById(steps[i]);
+      if(cur){ cur.className = 'loading-step active'; cur.querySelector('.step-icon').textContent = '▶'; }
+      i++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 700);
+  return interval;
+}
+
+// ── BUILD PROMPT ───────────────────────────
+function buildPrompt() {
+  const company = document.getElementById('compName').value || 'Company';
+  const finYear = document.getElementById('finYear').value;
+  const industry = document.getElementById('industry').value;
+  const extra = document.getElementById('extraInstructions').value;
+
+  const revRows = getRows('revenueRows');
+  const expRows = getRows('expenseRows');
+
+  const totalRev = revRows.reduce((s, r) => s + (parseFloat(r.amt) || 0), 0);
+  const totalExp = expRows.reduce((s, r) => s + (parseFloat(r.amt) || 0), 0);
+  const netProfit = totalRev - totalExp;
+  const profitPct = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : 0;
+
+  const openBal = document.getElementById('mOpenBal').value;
+  const closeBal = document.getElementById('mCloseBal').value;
+  const debtors = document.getElementById('mDebtors').value;
+  const creditors = document.getElementById('mCreditors').value;
+  const taxPaid = document.getElementById('mTax').value;
+  const gstCollected = document.getElementById('mGST').value;
+
+  const reportTypeMap = {
+    financial: 'Financial Summary Report',
+    audit: 'Internal Audit Note',
+    management: 'Management Report & Executive Briefing',
+    gst: 'GST Compliance & Tax Analysis Report'
+  };
+  const reportType = reportTypeMap[currentTab];
+
+  const revenueTable = revRows.length
+    ? revRows.map(r => `  - ${r.name}: ₹${Number(r.amt).toLocaleString('en-IN')} (YoY: ${r.extra || 'N/A'})`).join('\n')
+    : '  - No revenue data provided';
+
+  const expenseTable = expRows.length
+    ? expRows.map(r => `  - ${r.name}: ₹${Number(r.amt).toLocaleString('en-IN')} (${r.extra || 'N/A'} of revenue)`).join('\n')
+    : '  - No expense data provided';
+
+  const typeInstructions = {
+    financial: `Write a formal Financial Summary Report. Include: Executive Summary, Revenue Analysis, Expense Analysis, Profitability Assessment, Balance Sheet Highlights, Key Ratios (Profit Margin, Debt Ratio, etc.), and a Forward Outlook. Use professional accounting language.`,
+    audit: `Write a formal Internal Audit Note. Include: Scope & Objective, Revenue Verification, Expense Scrutiny, Tax Compliance Check, Working Capital Assessment, Observations & Findings, Risk Areas, and Audit Recommendations. Use formal audit language with numbered observations.`,
+    management: `Write an Executive Management Report suitable for board presentation. Include: Business Performance Overview, Key Highlights (wins & concerns), Financial Metrics Dashboard narrative, Strategic Observations, Risk Factors, and Management Recommendations for next quarter. Keep it crisp and decision-focused.`,
+    gst: `Write a GST Compliance & Tax Analysis Report. Include: GST Collection Summary, Input Tax Credit Analysis, Tax Liability Assessment, Compliance Status, Filing Readiness Notes, and Tax Optimization Recommendations. Use GST-specific terminology.`
+  };
+
+  return `You are a senior Chartered Accountant and business analyst. Generate a professional ${reportType} based on the following financial data.
+
+COMPANY: ${company}
+FINANCIAL YEAR: ${finYear}
+INDUSTRY: ${industry}
+
+REVENUE BREAKDOWN:
+${revenueTable}
+TOTAL REVENUE: ₹${totalRev.toLocaleString('en-IN')}
+
+EXPENSE BREAKDOWN:
+${expenseTable}
+TOTAL EXPENSES: ₹${totalExp.toLocaleString('en-IN')}
+
+CALCULATED METRICS:
+- Net Profit / (Loss): ₹${netProfit.toLocaleString('en-IN')}
+- Net Profit Margin: ${profitPct}%
+- Opening Balance: ₹${Number(openBal).toLocaleString('en-IN')}
+- Closing Balance: ₹${Number(closeBal).toLocaleString('en-IN')}
+- Total Debtors (Receivables): ₹${Number(debtors).toLocaleString('en-IN')}
+- Total Creditors (Payables): ₹${Number(creditors).toLocaleString('en-IN')}
+- Tax Paid: ₹${Number(taxPaid).toLocaleString('en-IN')}
+- GST Collected: ₹${Number(gstCollected).toLocaleString('en-IN')}
+
+REPORT TYPE INSTRUCTIONS:
+${typeInstructions[currentTab]}
+
+${extra ? `ADDITIONAL INSTRUCTIONS FROM USER:\n${extra}` : ''}
+
+FORMAT RULES:
+- Use clear section headings with ## markers
+- Use bullet points with - for lists
+- Bold important figures using **text**
+- Keep the tone professional, formal, and concise
+- Include specific numbers from the data provided
+- Provide at least 4–5 substantive sections
+- End with a clear Conclusion or Recommendations section
+- Do NOT use markdown tables (use bullet lists instead for data)`;
+}
+
+// ── RENDER REPORT ──────────────────────────
+function renderReport(rawText) {
+  generatedText = rawText;
+  const company = document.getElementById('compName').value || 'Company';
+  const finYear = document.getElementById('finYear').value;
+  const industry = document.getElementById('industry').value;
+  const now = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+
+  const reportTypeLabels = {
+    financial: '📊 Financial Summary Report',
+    audit: '🔍 Internal Audit Note',
+    management: '📋 Management Report',
+    gst: '🧾 GST Analysis Report'
+  };
+
+  // Parse raw text into HTML
+  let html = rawText
+    .replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
+    .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^-\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[h|u|l])/gm, '');
+
+  // Wrap bare paragraphs
+  html = html.split('\n').map(line => {
+    if (!line.trim()) return '';
+    if (line.startsWith('<h') || line.startsWith('<ul') || line.startsWith('<li') || line.startsWith('</')) return line;
+    return `<p>${line}</p>`;
+  }).join('');
+
+  // Calculate totals for meta strip
+  const revRows = getRows('revenueRows');
+  const expRows = getRows('expenseRows');
+  const totalRev = revRows.reduce((s, r) => s + (parseFloat(r.amt) || 0), 0);
+  const totalExp = expRows.reduce((s, r) => s + (parseFloat(r.amt) || 0), 0);
+  const netProfit = totalRev - totalExp;
+  const profitPct = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : '0';
+
+  const fmt = n => '₹' + Math.abs(n).toLocaleString('en-IN');
+
+  const reportEl = document.getElementById('stateReport');
+  reportEl.innerHTML = `
+    <div class="report-doc">
+      <h1>${reportTypeLabels[currentTab]}</h1>
+      <div class="report-meta">
+        <div class="meta-item"><div class="meta-key">Company</div><div class="meta-val">${company}</div></div>
+        <div class="meta-item"><div class="meta-key">Period</div><div class="meta-val">${finYear}</div></div>
+        <div class="meta-item"><div class="meta-key">Industry</div><div class="meta-val">${industry}</div></div>
+        <div class="meta-item"><div class="meta-key">Generated</div><div class="meta-val">${now}</div></div>
+        <div class="meta-item"><div class="meta-key">Powered By</div><div class="meta-val" style="color:var(--cyan)">Claude AI</div></div>
+      </div>
+      <div class="report-kpis">
+        <div class="r-kpi">
+          <div class="r-kpi-lbl">Total Revenue</div>
+          <div class="r-kpi-val" style="color:var(--green)">${fmt(totalRev)}</div>
+          <div class="r-kpi-sub">${revRows.length} revenue lines</div>
+        </div>
+        <div class="r-kpi">
+          <div class="r-kpi-lbl">Total Expenses</div>
+          <div class="r-kpi-val" style="color:var(--red)">${fmt(totalExp)}</div>
+          <div class="r-kpi-sub">${expRows.length} expense heads</div>
+        </div>
+        <div class="r-kpi">
+          <div class="r-kpi-lbl">Net Profit</div>
+          <div class="r-kpi-val" style="color:${netProfit>=0?'var(--cyan)':'var(--red)'}">${netProfit<0?'-':''}${fmt(netProfit)}</div>
+          <div class="r-kpi-sub">Margin: ${profitPct}%</div>
+        </div>
+        <div class="r-kpi">
+          <div class="r-kpi-lbl">GST Collected</div>
+          <div class="r-kpi-val" style="color:var(--gold)">${fmt(parseFloat(document.getElementById('mGST').value)||0)}</div>
+          <div class="r-kpi-sub">Tax paid: ${fmt(parseFloat(document.getElementById('mTax').value)||0)}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:4px;">
+        ${html}
+      </div>
+      <div style="margin-top:24px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Fira Code',monospace;">
+        ⚠️ This report is AI-generated based on input data. Verify all figures independently before using for official filing, audit submission, or board presentation.
+        Generated by ReportAI · Prompt Engineering by Aditya Pareek · ${now}
+      </div>
+    </div>
+  `;
+}
+
+// ── GENERATE ───────────────────────────────
+async function generateReport() {
+  const revRows = getRows('revenueRows');
+  const expRows = getRows('expenseRows');
+  if (revRows.length === 0 && expRows.length === 0) {
+    alert('Please add at least some revenue or expense data before generating a report.');
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  setState('loading');
+  const stepInterval = animateSteps();
+
+  try {
+    const prompt = buildPrompt();
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    clearInterval(stepInterval);
+    // mark all steps done
+    for(let i=1;i<=5;i++){
+      const s=document.getElementById('step'+i);
+      if(s){s.className='loading-step done';s.querySelector('.step-icon').textContent='✓';}
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API Error ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+
+    if (!text) throw new Error('No content returned from AI.');
+
+    await new Promise(r => setTimeout(r, 400)); // brief pause for UX
+    renderReport(text);
+    setState('done');
+
+  } catch (err) {
+    clearInterval(stepInterval);
+    document.getElementById('errorMsg').textContent = err.message || 'Unexpected error. Please try again.';
+    setState('error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── ACTIONS ────────────────────────────────
+function printReport() {
+  const content = document.getElementById('stateReport').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+      body{font-family:'Outfit',sans-serif;font-size:13px;color:#111;line-height:1.7;padding:32px;max-width:800px;margin:0 auto;}
+      h1{font-size:26px;margin-bottom:8px;}
+      h2{font-size:15px;font-weight:700;margin:20px 0 8px;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:4px;}
+      h3{font-size:13px;font-weight:700;margin:14px 0 5px;color:#444;}
+      p{margin-bottom:10px;color:#333;}
+      ul{margin:6px 0 10px 16px;}
+      li{margin-bottom:4px;color:#333;}
+      .report-meta{display:flex;gap:20px;flex-wrap:wrap;background:#f5f5f5;padding:10px 14px;border-radius:6px;margin:12px 0;}
+      .meta-key{font-size:10px;text-transform:uppercase;color:#888;margin-bottom:2px;}
+      .meta-val{font-size:12px;font-weight:600;}
+      .report-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0;}
+      .r-kpi{border:1px solid #e2e2e2;border-radius:6px;padding:10px;}
+      .r-kpi-lbl{font-size:9px;text-transform:uppercase;color:#999;margin-bottom:4px;}
+      .r-kpi-val{font-size:20px;font-weight:700;color:#111;}
+    </style></head><body>${content}</body></html>
+  `);
+  win.document.close();
+  win.print();
+}
+
+function copyReport() {
+  if (!generatedText) return;
+  navigator.clipboard.writeText(generatedText).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Text', 2000);
+  });
+}
+
+// ── INIT ───────────────────────────────────
+// Pre-load 3 revenue rows and 3 expense rows
+addRevRow({ name: 'Product Sales', amt: '480000', change: '+15%' });
+addRevRow({ name: 'Service Revenue', amt: '220000', change: '+8%' });
+addRevRow({ name: 'Other Income', amt: '45000', change: '+3%' });
+addExpRow({ name: 'Staff Salaries', amt: '280000', pct: '38%' });
+addExpRow({ name: 'Operations & Overhead', amt: '95000', pct: '13%' });
+addExpRow({ name: 'Marketing', amt: '55000', pct: '7%' });
+
+setState('idle');
+</script>
+</body>
+</html>
